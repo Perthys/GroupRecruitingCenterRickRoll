@@ -4,9 +4,10 @@ end;
 
 shared.Config = {
    Lyrics = loadstring(game:HttpGet('https://raw.githubusercontent.com/Perthys/rickroll/main/rick_roll.lua'))();
-   TimeoutTimePerLyricDivision = 10;
+   TimeoutTimePerLyricDivision = 20;
    SignName = "Text Sign";
-   Rainbow = true
+   Rainbow = true;
+   CurrentColor = nil;
 }
 
 local Config = shared.Config
@@ -36,29 +37,37 @@ local function GetSign()
     return false -- not needed just wanted to structure it
 end;
 
+local function GetRemote(Sign)
+    if Sign then
+        local Remote = Sign:FindFirstChild("Interact")
+        
+        if Remote then
+            return Remote 
+        end
+        
+        return false
+    end
+end
+
 local function SetText(Text)
     local Sign = GetSign()
     local Text = Text or ""
-
-    if Sign then
-        local Remote = Sign:FindFirstChild("Interact")
-        if Remote then
-            Remote:FireServer("SetText", Text)
-        end
+    local Remote = GetRemote(Sign);
+    
+    if Remote then
+        return Remote:FireServer("SetText", Text)
     end
 end
 
 local function SetColor(Color1, Color2)
     local Sign = GetSign()
+    local Remote = GetRemote(Sign);
 
-    if Sign then
-        local Remote = Sign:FindFirstChild("Interact")
-        if Remote then
-            Remote:FireServer("SetGradient", ColorSequence.new({
-            	ColorSequenceKeypoint.new(0, Color1),
-            	ColorSequenceKeypoint.new(1, Color2)
-            }), 0)
-        end
+    if Remote then
+        return Remote:FireServer("SetGradient", ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color1),
+            ColorSequenceKeypoint.new(1, Color2)
+        }), 0)
     end
 end
 
@@ -68,7 +77,7 @@ local function EquipSign()
 	local Sign = Backpack:FindFirstChild(Config.SignName)
 
 	if Sign then
-		Humanoid:EquipTool(Sign);
+		Sign.Parent = Character;
 	end
 end
 
@@ -81,27 +90,36 @@ local function Reset()
     SetColor(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 255, 255))
 end
 
-shared.Looped = false; wait(); shared.Looped = true;
+local function Rainbowify()
+    if shared.Config.Rainbow then
+        SetColor(CurrentColor, GetTickColor())
+        CurrentColor = GetTickColor();
+    end
+end
 
-local CurrentColor = GetTickColor(); Reset()
+local function Rainbowify()
+    if shared.Config.Rainbow then
+        SetColor(Config.CurrentColor, GetTickColor())
+        Config.CurrentColor = GetTickColor();
+    end
+end
+
+shared.Looped = false; wait(1) shared.Looped = true;
+
+Config.CurrentColor = GetTickColor(); Reset()
 
 while shared.Looped do
-    for i = 1,#Config.Lyrics do
+    for Index, Text in pairs(Config.Lyrics) do
+        if not shared.Looped then
+            Reset()
+            break
+        end
+        
+        Rainbowify()
         EquipSign()
-        local Text = Config.Lyrics[i]
 
         SetText(Text)
         
-        if shared.Config.Rainbow then
-            SetColor(CurrentColor, GetTickColor())
-            CurrentColor = GetTickColor();
-        end
-        
         wait(#Text / Config.TimeoutTimePerLyricDivision)
-        
-        if not shared.Looped then
-            Reset()
-          break
-        end
     end
 end
