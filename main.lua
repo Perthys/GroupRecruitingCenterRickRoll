@@ -44,9 +44,9 @@ local function GetRemote(Sign)
         if Remote then
             return Remote 
         end
-        
-        return false
     end
+	
+	return false
 end
 
 local function SetText(Text)
