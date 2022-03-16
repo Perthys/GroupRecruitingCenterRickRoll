@@ -86,8 +86,8 @@ shared.Looped = false; wait(); shared.Looped = true;
 local CurrentColor = GetTickColor(); Reset()
 
 while shared.Looped do
-	EquipSign()
     for i = 1,#Config.Lyrics do
+        EquipSign()
         local Text = Config.Lyrics[i]
 
         SetText(Text)
